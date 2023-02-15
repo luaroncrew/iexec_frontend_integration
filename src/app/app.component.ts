@@ -1,9 +1,16 @@
 import {Component} from '@angular/core';
-import {IExec, IExecConfig, IExecOrderbookModule, IExecOrderModule, IExecWalletModule} from "iexec";
+import {
+  IExec,
+  IExecConfig,
+  IExecDealModule,
+  IExecOrderbookModule,
+  IExecOrderModule,
+  IExecTaskModule,
+  IExecWalletModule
+} from "iexec";
 
 
 const VALIDATOR_APP_ADDRESS = '0xFF1204Ce914006C7479b0E362A4AC6917F84D8b3';
-const APP_CALL_PARAMETERS = 'setup';
 const APP_CATEGORY = 0;
 
 @Component({
@@ -13,9 +20,12 @@ const APP_CATEGORY = 0;
 })
 
 export class AppComponent {
-
+  lastValidationResult: string = '';
+  taskId: string = '';
   ethProvider: any;
   iexec: any;
+  TOTPCode: string = '';
+  codeSendingStatus: string = 'Not sent';
 
   async initWallet() {
     if (typeof window.ethereum !== 'undefined') {
@@ -48,10 +58,8 @@ export class AppComponent {
             }
           ]
         });
-      }
-  }
-  verifyProvider() {
-    console.log('ethereum provider: ', this.ethProvider);
+    }
+    this.initIexecUsingConfig()
   }
 
   initIexecUsingConfig() {
@@ -94,7 +102,7 @@ export class AppComponent {
       workerpoolmaxprice: workerPoolOrder?.order.workerpoolprice,
       requester: userAddress,
       volume: 1,
-      params: APP_CALL_PARAMETERS,
+      params: `signature ${this.TOTPCode}`,
       category: APP_CATEGORY
     });
     console.log('created requestOrder: ', requestOrderToSign);
@@ -109,8 +117,26 @@ export class AppComponent {
       requestorder: requestOrder,
       workerpoolorder: workerPoolOrder?.order
     });
-    console.log(res);
+    this.codeSendingStatus = 'Validation Requested'
 
+    // get deal by its id
+    const dealModule = IExecDealModule.fromConfig(this.iexec);
+    const deal = await dealModule.show(res.dealid);
+    const taskId = deal.tasks["0"];
+
+    console.log('taksId: ', taskId);
+    console.log('deal: ', deal);
+
+    this.taskId = taskId;
+  }
+  async getResult() {
+    // get needed task
+    console.log('app called with parameters: ', `signature ${this.TOTPCode}`);
+    const taskModule = IExecTaskModule.fromConfig(this.iexec);
+    const response = await taskModule.fetchResults(this.taskId);
+    const file = await response;
+    console.log('execution final results: ', file.url);
+    this.lastValidationResult = file.url
   }
 }
 

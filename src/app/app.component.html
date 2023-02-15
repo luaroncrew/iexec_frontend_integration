@@ -1,4 +1,15 @@
-<button (click)="initWallet()">init wallet</button>
-<button (click)="verifyProvider()">verify eth provider</button>
-<button (click)="initIexecUsingConfig()"> init iexec</button>
+<button (click)="initWallet()">init wallet and IExec</button>
 <button (click)="validateTotpCode()">validate totp</button>
+<input [(ngModel)]="TOTPCode" placeholder="123456">
+<br>
+<div style="margin-top: 2vh">code sending status : {{codeSendingStatus}} </div>
+<div style="margin-top: 2vh">deployed task: {{taskId}} </div>
+<div style="margin-top: 2vh">validation result: {{lastValidationResult}} </div>
+<br>
+<button (click)="getResult()">show execution result for task</button>
+<br>
+<div style="margin-top: 2vh">execution parameters: "{{'signature ' + TOTPCode}}"</div>
+
+
+
+
